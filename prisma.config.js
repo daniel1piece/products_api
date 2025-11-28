@@ -4,7 +4,7 @@ dotenv.config();
 
 export default {
   schema: "prisma/schema.prisma",
-  migration: {
+  migrations: {
     path: "prisma/migrations"
   },
   datasource: {

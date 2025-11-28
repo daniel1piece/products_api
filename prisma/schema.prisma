@@ -28,11 +28,11 @@ model User {
   status     Int        @default(1) @db.TinyInt
   /// timestamp
   created_at DateTime   @default(now()) @db.DateTime(6)
-  updated_at DateTime   @updateAt @db.DateTime(6)
+  updated_at DateTime   @updatedAt @db.DateTime(6)
   deleted_at DateTime?  @db.DateTime(6)  
 
   /// Relationships with other tables (foreign keys)
-  /// 1 - to - 1 Relationships
+  /// 1 - to - many Relationships
   orders     Order[]
   products   Product[]
   /// 1 to 1 Relationships
@@ -42,20 +42,21 @@ model User {
 }
 
 model Profile {
-  id          BigInt      @id default(autoincrement())
-  user_id     BigInt      @unique
-  bio         String?     @db.TEXT
+  id          BigInt      @id @default(autoincrement())
+  
+  bio         String?     @db.Text
   phone       String?     @db.VarChar(50) 
    /// Estado 
   status      Int        @default(1) @db.TinyInt
   /// timestamp
   created_at   DateTime   @default(now()) @db.DateTime(6)
-  updated_at   DateTime   @updateAt @db.DateTime(6)
+  updated_at   DateTime   @updatedAt @db.DateTime(6)
   deleted_at   DateTime?  @db.DateTime(6)     
 
   /// Relationships  
   /// 1 - to - 1
-  user User @relation(fields: [user_id, references: [id]])
+  userId User @relation(fields: [user_id], references: [id])
+  user_id     BigInt      @unique
 
   /// name of the table in db
   @@map("profiles")
@@ -63,16 +64,16 @@ model Profile {
 
 model Category {
   id            BigInt      @id @default(autoincrement())
-  name          String      @ad.VarChar(150)
-  description   String?     @db.text
+  name          String      @db.VarChar(150)
+  description   String?     @db.Text
    /// Estado 
   status        Int         @default(1) @db.TinyInt
   /// timestamp
   created_at    DateTime    @default(now()) @db.DateTime(6)
-  updated_at    DateTime    @updateAt @db.DateTime(6)
+  updated_at    DateTime    @updatedAt @db.DateTime(6)
   deleted_at    DateTime?   @db.DateTime(6) 
-
-  products Productos[]
+  // 1 - to - many Relationship
+  products Product[]
 
   @@map("categories")
 }
@@ -82,7 +83,7 @@ model Product {
   id          BigInt          @id @default(autoincrement())
   sku         String          @unique @db.VarChar(100)
   name        String          @db.VarChar(200)
-  description String?         @db.TEXT
+  description String?         @db.Text
   price       Float           
   stock       Int             
   is_digital  Boolean         @default(false)
@@ -90,12 +91,12 @@ model Product {
   status     Int              @default(1) @db.TinyInt
   /// timestamp
   created_at DateTime         @default(now()) @db.DateTime(6)
-  updated_at DateTime         @updateAt @db.DateTime(6)
+  updated_at DateTime         @updatedAt @db.DateTime(6)
   deleted_at DateTime?        @db.DateTime(6) 
 
   Category_id   BigInt?
   user_id       BigInt?
-  order_items   OrderItem[]
+  order_item    OrderItem[]
   product_tags  ProductTag[]       
   Category      Category?     @relation(fields: [Category_id], references: [id])
   user          User?         @relation(fields: [user_id], references: [id])
@@ -107,16 +108,31 @@ model Product {
   @@map("products")
 }
 
-/// Tags 
+// Tag
+model Tag {
+   id          BigInt          @id @default(autoincrement())
+   name        String          @db.VarChar(100)
+   status      Int             @default(1) @db.TinyInt
+  /// timestamp
+  created_at DateTime         @default(now()) @db.DateTime(6)
+  updated_at DateTime         @updatedAt @db.DateTime(6)
+  deleted_at DateTime?        @db.DateTime(6) 
+
+  product_tags ProductTag[]
+
+  @@map("tags")
+}
+
+/// Product Tags 
 model ProductTag {
   id          BigInt          @id @default(autoincrement())
   product_id  BigInt
   tag_id      BigInt
    /// Estado 
-  status     Int              @default(1) @db.TinyInt
+  status      Int              @default(1) @db.TinyInt
   /// timestamp
   created_at DateTime         @default(now()) @db.DateTime(6)
-  updated_at DateTime         @updateAt @db.DateTime(6)
+  updated_at DateTime         @updatedAt @db.DateTime(6)
   deleted_at DateTime?        @db.DateTime(6) 
 
 
@@ -138,18 +154,18 @@ model Order {
   status     Int              @default(1) @db.TinyInt
   /// timestamp
   created_at DateTime         @default(now()) @db.DateTime(6)
-  updated_at DateTime         @updateAt @db.DateTime(6)
+  updated_at DateTime         @updatedAt @db.DateTime(6)
   deleted_at DateTime?        @db.DateTime(6) 
 
-  items     OrderItems[]
-  user      User              @relation(fields: [user_id, references: [id]])
+  items     OrderItem[]
+  user      User              @relation(fields: [user_id], references: [id])
 
   @@index([user_id], map: "orders_user_id_fkey")
   @@map("orders")
 }
 
 /// OrderItem
-model OrderItems {
+model OrderItem {
   id          BigInt          @id @default(autoincrement())
   order_id    BigInt
   product_id  BigInt
@@ -159,13 +175,21 @@ model OrderItems {
   status     Int              @default(1) @db.TinyInt
   /// timestamp
   created_at DateTime         @default(now()) @db.DateTime(6)
-  updated_at DateTime         @updateAt @db.DateTime(6)
+  updated_at DateTime         @updatedAt @db.DateTime(6)
   deleted_at DateTime?        @db.DateTime(6) 
 
-  order       Order     @relation(field: [order_id], references: [id])
-  product     Product   @relation(field: [product_id], references: [id])
+  order       Order     @relation(fields: [order_id], references: [id])
+  product     Product   @relation(fields: [product_id], references: [id])
 
   @@index([order_id], map: "order_items_order_id_fkey")
   @@index([product_id], map: "order_items_product_id_fkey")
   @@map("order_items")
 }
+
+/// npx prisma validate
+/// The above command helps us check if our migrations are ready
+// if there's any mistake, it will hightlight it and
+// we will need to correct it after that we will be able to run the
+// migration by following the below command
+
+/// We should have initialized the prima client npx prisma generate at the beginning
